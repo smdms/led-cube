@@ -2,68 +2,79 @@
 #define LAYER_H
 
 #include "range.h"
+#include "row.h"
 
 template <int N>
 class Layer
 {
 public:
-    Layer();
-    Layer(int value);
+    Layer() = delete;
+    Layer(bool* value[N][N]);
 
-    int value() const;
-    void set(int value);
-    void write(const int (&addressPins)[N * N]) const;
+    Row<N> row(const int index);
+    Row<N> column(const int index);
+
+    // operator[] returns row
+    Row<N> operator[](const int index);
+    Layer<N>& operator=(const bool value);
 
 private:
-    const int mask() const;
-
-    int _value;
+    bool* _elements[N][N];
 };
 
-// template function definitions //////////////////////////////////////////////
+//
 
 template <int N>
-Layer<N>::Layer()
-: _value(0)
-{}
-
-template <int N>
-Layer<N>::Layer(int value)
-: _value(value & mask())
-{}
-
-template <int N>
-int Layer<N>::value() const
+Layer<N>::Layer(bool* value[N][N])
+: _elements{}
 {
-    return _value;
-}
-
-template <int N>
-void Layer<N>::set(int value)
-{
-    _value = value & mask();
-}
-
-template <int N>
-void Layer<N>::write(const int (&addressPins)[N * N]) const
-{
-    int value = _value;
-    for (const auto pin : addressPins)
+    for (const auto r : range(N))
     {
-        digitalWrite(pin, value & 1);
-        value = value >> 1;
+        for (const auto c : range(N))
+        {
+            _elements[r][c] = value[r][c];
+        }
     }
 }
 
 template <int N>
-const int Layer<N>::mask() const
+Row<N> Layer<N>::row(const int index)
 {
-    int ret = 0;
-    for (const auto i : range(N * N))
+    bool* initializer[N]{};
+    for (const auto i : range(N))
     {
-        ret = (ret << 1) + 1;
+        initializer[i] = _elements[index][i];
     }
-    return ret;
+    return Row<N>(initializer);
+}
+
+template <int N>
+Row<N> Layer<N>::column(const int index)
+{
+    bool* initializer[N]{};
+    for (const auto i : range(N))
+    {
+        initializer[i] = _elements[i][index];
+    }
+    return Row<N>(initializer);
+}
+
+template <int N>
+Row<N> Layer<N>::operator[](const int index)
+{
+    return row(index);
+}
+
+template <int N>
+Layer<N>& Layer<N>::operator=(const bool value)
+{
+    for (const auto r : range(N))
+    {
+        for (const auto c : range(N))
+        {
+            *(_elements[r][c]) = value;
+        }
+    }
 }
 
 #endif
