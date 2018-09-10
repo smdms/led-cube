@@ -1,19 +1,13 @@
 #include <Arduino.h>
 
+#include "config.h"
 #include "len.h"
 #include "output.h"
-
-void operator delete(void* ptr, unsigned int size)
-{
-    delete ptr;
-}
+#include "walk_animation.h"
+#include "snake_animation.h"
 
 namespace
 {
-
-const int SIZE = 3;
-const int ADDRESS_PINS[SIZE * SIZE] = {2, 4, 7, 8, 9, 10, 11, 12, 13};
-const int GROUND_PINS[SIZE] = {3, 5, 6};
 
 void reset()
 {
@@ -43,26 +37,58 @@ void setup()
     }
 
     reset();
-    Serial.begin(9600);
+    Serial.begin(19200);
 }
 
-using Cube3 = Cube<SIZE>;
+Coordinates path[] = {
+    {0, 0, 0},
+    {2, 0, 0},
+    {2, 2, 0},
+    {2, 2, 2},
+    {2, 0, 2},
+    {0, 0, 2},
+    {0, 2, 2},
+    {0, 2, 0},
+    {0, 0, 0},
+};
+
+Coordinates path2[] = {
+    {2, 2, 2},
+    {2, 0, 2},
+    {0, 0, 2},
+    {0, 2, 2},
+    {0, 2, 0},
+    {0, 0, 0},
+    {2, 0, 0},
+    {2, 2, 0},
+    {2, 2, 2},
+};
+
+SnakeAnimation<SIZE> y(3, path, true, 100);
+SnakeAnimation<SIZE> z(3, path2, true, 100);
+
+const MatrixLedOutput<SIZE> output(ADDRESS_PINS, GROUND_PINS);
 
 void loop()
 {
-    Cube<3> cube;
-    MatrixLedOutput<3> output(ADDRESS_PINS, GROUND_PINS);
-
-    for (const auto l : range(3))
+    if (y)
     {
-        for (const auto r : range(3))
-        {
-            for (const auto c : range(3))
-            {
-                cube = 0;
-                cube[l][r][c] = 1;
-                output.draw(cube);
-            }
-        }
+        y.advance();
     }
+    else
+    {
+        y.start();
+    }
+
+    if (z)
+    {
+        z.advance();
+    }
+    else
+    {
+        z.start();
+    }
+
+    Cube<SIZE> frame = z.value() | y.value();
+    output.draw(frame, 150);
 }

@@ -2,6 +2,7 @@
 #define OUTPUT_H
 
 #include "layer.h"
+#include "cube.h"
 
 template <int N>
 struct MatrixLedOutput
@@ -11,12 +12,12 @@ struct MatrixLedOutput
         const int (&addressPins)[N * N], 
         const int (&groundPins)[N]);
     
-    void draw(const Cube<N> &cube, unsigned long duration = 250);
+    void draw(const Cube<N>& cube, const unsigned long duration = 250) const;
 
 private:
     void reset();
-    void activateLayer(int layer);
-    void drawLayer(const Layer<N> &layer);
+    void activateLayer(const int layer);
+    void drawLayer(const Layer<N>& layer);
 
     int _addressPins[N * N];
     int _groundPins[N];
@@ -42,7 +43,7 @@ MatrixLedOutput<N>::MatrixLedOutput(
 }
 
 template <int N>
-void MatrixLedOutput<N>::draw(const Cube<N> &cube, unsigned long duration)
+void MatrixLedOutput<N>::draw(const Cube<N>& cube, const unsigned long duration) const
 {
     unsigned long start = millis();
     while (millis() < start + duration)
@@ -79,7 +80,7 @@ void MatrixLedOutput<N>::reset()
 }
 
 template <int N>
-void MatrixLedOutput<N>::activateLayer(int layer)
+void MatrixLedOutput<N>::activateLayer(const int layer)
 {
     digitalWrite(_groundPins[layer], 0);
 }

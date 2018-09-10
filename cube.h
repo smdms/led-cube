@@ -3,6 +3,7 @@
 
 #include "range.h"
 #include "layer.h"
+#include "coordinates.h"
 
 template <int N>
 class Cube
@@ -20,10 +21,14 @@ public:
     // parallel to resistors; starts from 0/A5 side
     Layer<N> zLayer(const int index);
 
+    bool& at(const Coordinates& c);
+
     // operator[] returns xLayer
     Layer<N> operator[](const int index);
     Cube& operator=(const Cube& other);
     Cube& operator=(const bool value);
+
+    Cube& operator|(const Cube& other);
 
 private:
     bool _elements[N][N][N];
@@ -95,6 +100,12 @@ Layer<N> Cube<N>::zLayer(const int index)
 }
 
 template <int N>
+bool& Cube<N>::at(const Coordinates& c)
+{
+    return this->operator[](c.x)[c.y][c.z];
+}
+
+template <int N>
 Layer<N> Cube<N>::operator[](const int index)
 {
     return xLayer(index);
@@ -126,6 +137,22 @@ Cube<N>& Cube<N>::operator=(const bool value)
             for (const auto c : range(N))
             {
                 _elements[l][r][c] = value;
+            }
+        }
+    }
+    return *this;
+}
+
+template <int N>
+Cube<N>& Cube<N>::operator|(const Cube& other)
+{
+    for (const auto l : range(N))
+    {
+        for (const auto r : range(N))
+        {
+            for (const auto c : range(N))
+            {
+                _elements[l][r][c] |= other._elements[l][r][c];
             }
         }
     }
